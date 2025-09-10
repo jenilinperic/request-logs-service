@@ -6,5 +6,5 @@ COPY package*.json ./
 RUN npm install --omit=dev && npm cache clean --force
 COPY src ./src
 COPY .env ./.env
-EXPOSE 3000
+EXPOSE 6000
 CMD ["node","src/index.js"]
