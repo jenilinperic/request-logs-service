@@ -196,3 +196,34 @@ If you get `{"success":true}` the process is up.
 
 ## 14. License
 MIT (see `package.json`).
+
+## 15. Automated Backups (Optional)
+Set these in `.env` to enable daily backups:
+```
+BACKUP_ENABLED=true
+BACKUP_CRON=0 2 * * *
+BACKUP_RETENTION_DAYS=7
+BACKUP_S3_BUCKET=your-bucket
+BACKUP_S3_REGION=us-east-1
+BACKUP_S3_ACCESS_KEY=AKIA...
+BACKUP_S3_SECRET_KEY=...secret...
+# For DigitalOcean Spaces (example):
+# BACKUP_S3_ENDPOINT=https://nyc3.digitaloceanspaces.com
+```
+Behavior:
+- Creates compressed dumps (.sql.gz for Postgres or .tar.gz for Mongo) in `BACKUP_DIR` (default `/tmp/db_backups`).
+- Uploads to S3 / compatible endpoint if bucket & credentials provided.
+- Retains only newest N files (local + remote) where N = `BACKUP_RETENTION_DAYS`.
+- Can trigger a one-off backup at startup with `BACKUP_RUN_ON_START=true`.
+
+Cron Expression Notes:
+- Defaults to `0 2 * * *` (02:00 UTC daily). Use https://crontab.guru to adjust.
+
+Validate Manually (inside container):
+```
+node -e "import('./src/backup.js').then(m=>m.runBackup(console))"
+```
+
+Troubleshooting:
+- Ensure `pg_dump` or `mongodump` installed (added via Dockerfile using alpine packages).
+- Check logs for `Backup failed` messages (enable higher verbosity with `LOG_LEVEL=info`).

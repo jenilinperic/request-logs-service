@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
 import { initDb, insertLog } from './persistence.js';
+import { scheduleBackups, runBackup } from './backup.js';
 
 dotenv.config();
 
@@ -57,6 +58,12 @@ fastify.post('/log', async (request, reply) => {
 
 const start = async () => {
   await initDb();
+  // Schedule backups after DB ready
+  scheduleBackups(fastify.log);
+  // Optional immediate backup on start if flag set
+  if (/^true$/i.test(process.env.BACKUP_RUN_ON_START || '')) {
+    runBackup(fastify.log).catch(()=>{});
+  }
   const port = process.env.PORT || 6000;
   try {
     await fastify.listen({ port, host: '0.0.0.0' });

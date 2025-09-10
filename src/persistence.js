@@ -75,3 +75,4 @@ export async function insertLog(doc) {
     return pgPool.query(q, params).catch(e => { /* swallow; requirement: never throw */ });
   }
 }
+

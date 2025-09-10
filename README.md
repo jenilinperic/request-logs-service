@@ -9,6 +9,7 @@ Minimal microservice to persist API request / response and domain event logs int
 - Postgres (default) or MongoDB selectable via `DB_DRIVER` env var.
 - Auto-creates table / collection and an index on timestamp.
 - Safe schema evolution: new columns added automatically (Postgres) if missing.
+- Optional daily automated database backup to local storage & S3 / Spaces with retention.
 
 ## 📦 Payload Schemas
 ### 1. Structured Event (recommended)
@@ -63,6 +64,13 @@ Key variables (defaults in parentheses):
 - `DB_DRIVER` (postgres) – `postgres` or `mongo`
 - Postgres: `PG_HOST` (localhost), `PG_PORT` (5432), `PG_DATABASE` (request_logs), `PG_USER` (postgres), `PG_PASSWORD` (postgres), `PG_SSL` (false|true)
 - Mongo: `MONGO_URI` (mongodb://localhost:27017), `MONGO_DB` (request_logs)
+- Backups (optional):
+  - `BACKUP_ENABLED` (false) – set `true` to enable scheduled backups
+  - `BACKUP_CRON` (`0 2 * * *`) – cron in UTC for backup schedule
+  - `BACKUP_RETENTION_DAYS` (7) – keep most recent N backup files locally & remotely
+  - `BACKUP_RUN_ON_START` (false) – run one backup immediately at boot
+  - `BACKUP_DIR` (/tmp/db_backups) – local directory inside container
+  - S3 / Spaces: `BACKUP_S3_BUCKET`, `BACKUP_S3_REGION` (us-east-1), `BACKUP_S3_ACCESS_KEY`, `BACKUP_S3_SECRET_KEY`, optional `BACKUP_S3_ENDPOINT` (for Spaces), `BACKUP_S3_PREFIX` (request-logs-service/backups)
 
 Secrets (passwords, tokens) should live only in `.env` (which should NOT be committed).
 
@@ -136,6 +144,7 @@ db.api_logs.find({ event: { $ne: null } }, { ts:1, event:1, entity:1, entityId:1
 - Insert is fire-and-forget: failures are logged internally; client still gets success.
 - Keep payloads modest; very large blobs increase storage cost and write latency.
 - Add external retention / archival if high volume (e.g. nightly delete older than 90d).
+- Enable backups by setting `BACKUP_ENABLED=true` and providing S3 credentials if remote storage desired. Requires `pg_dump` (Postgres) or `mongodump` (Mongo) present in image; see Dockerfile adjustments below if customizing base image.
 
 ## 🔄 Migration & Backward Compatibility
 Old clients sending only legacy fields continue to work; new clients can adopt the structured schema incrementally. Legacy fields are derived automatically from structured logs.

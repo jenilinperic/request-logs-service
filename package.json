@@ -1,6 +1,6 @@
 {
   "name": "request-logs-service",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ultra-minimal request logging microservice supporting Postgres and MongoDB.",
   "main": "src/index.js",
   "type": "module",
@@ -9,9 +9,11 @@
     "dev": "NODE_ENV=development nodemon src/index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.645.0",
     "dotenv": "^16.4.5",
     "fastify": "^4.28.1",
     "mongodb": "^6.8.0",
+    "node-cron": "^3.0.3",
     "pg": "^8.12.0"
   },
   "devDependencies": {
